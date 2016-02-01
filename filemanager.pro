@@ -25,4 +25,4 @@ HEADERS  += mainwindow.h \
     model.h \
     modelitem.h
 
-FORMS    += mainwindow.ui
+FORMS    +=

@@ -101,7 +101,7 @@ void MainWindow::treeViewSelectionChanged(QModelIndex current, QModelIndex previ
     m_listView->setRootIndex(baseIndex);
 
     m_listViewSelectionModel->blockSignals(0);
-    QTimer::singleShot(30,this,SLOT(dirLoaded()));
+    QTimer::singleShot(30,this,SLOT(directoryLoaded()));
 }
 
 void MainWindow::listViewPressed(QModelIndex current)
