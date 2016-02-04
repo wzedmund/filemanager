@@ -5,19 +5,19 @@
 
 Model::Model()
 {
-    // Create root item
     m_rootItem = new ModelItem(QFileInfo("/"), new ModelItem(QFileInfo(), 0));
     QDir root("/");
     QFileInfoList drives = root.entryInfoList( QDir::AllEntries | QDir::Files
                                               | QDir::Hidden | QDir::System
                                               | QDir::NoDotAndDotDot);
 
-    // Create item per each drive
     foreach (QFileInfo drive, drives)
     {
         new ModelItem(drive, m_rootItem);
     }
+    m_rootItem->setSettle(true);
     m_rootItem = m_rootItem->parent();
+    m_fileIconProvider = new QFileIconProvider;
 }
 
 QModelIndex Model::index(int row, int column, const QModelIndex &parent) const
@@ -69,18 +69,30 @@ int Model::columnCount(const QModelIndex &parent) const
 
 QVariant Model::data(const QModelIndex &index, int role) const
 {
-    // Retrieve model item
     ModelItem *item = static_cast<ModelItem*>(index.internalPointer());
 
-    // Alignment of filename
-    if (role == Qt::TextAlignmentRole)
+    //Color
+    if (role == Qt::ForegroundRole)
+    {
+        QFileInfo type(item->fileInfo());
+        if(type.isHidden())
+            return QColor(Qt::darkGray);
+        else if(type.isSymLink())
+            return QColor(Qt::darkYellow);
+        else if(type.isDir())
+            return QColor(Qt::black);
+        else if(type.isExecutable())
+            return QColor(Qt::darkBlue);
+    }
+    //Alignment
+    else if (role == Qt::TextAlignmentRole)
     {
         if (index.column() == 1)
         {
             return Qt::AlignRight + Qt::AlignVCenter;
         }
     }
-    // Display information about file
+    //file info
     else if (role == Qt::DisplayRole) {
       QVariant data;
       switch (index.column()) {
@@ -104,7 +116,6 @@ QVariant Model::data(const QModelIndex &index, int role) const
             str.append(perms.testFlag(QFileDevice::ReadOther) ? "r" : "-" );
             str.append(perms.testFlag(QFileDevice::WriteOther) ? "w" : "-" );
             str.append(perms.testFlag(QFileDevice::ExeOther) ? "x" : "-" );
-
             str.append(" " + item->fileInfo().owner() + " " +
                        item->fileInfo().group());
             item->m_permissions = str;
@@ -117,13 +128,17 @@ QVariant Model::data(const QModelIndex &index, int role) const
       }
       return data;
     }
-    // Display file name
-    else if(role == Qt::EditRole) {
-      return item->fileName();
+    //file name
+    else if(role == Qt::EditRole)
+    {
+        return item->fileName();
     }
-
-    if (role == Qt::StatusTipRole) {
-      return item->fileName();
+    //file icon
+    else if (role == Qt::DecorationRole)
+    {
+        if (index.column() != 0)
+            return QVariant();
+        return getIcon(item);
     }
     return QVariant();
 }
@@ -178,7 +193,7 @@ QString Model::filePath(const QModelIndex &index)
     if(item)
         return item->absoluteFilePath();
 
-    return false;
+    return "";
 }
 
 QModelIndex Model::index(const QString &path) const
@@ -194,6 +209,46 @@ QModelIndex Model::index(const QString &path) const
 bool Model::setRootPath(const QString &path)
 {
     m_currentRootPath = path;
+    ModelItem *item = m_rootItem->matchPath(path.split("/"));
+    if(item && !item->isSettled())
+        settleItem(item);
+    return true;
+}
+
+int Model::size(const QModelIndex &index)
+{
+    ModelItem *item = static_cast<ModelItem*>(index.internalPointer());
+    if(item)
+        return item->fileInfo().size();
+    return 0;
+}
+
+void Model::settleItem(ModelItem *item)
+{
+    item->setSettle(true);
+    QDir dir(item->absoluteFilePath());
+    QFileInfoList all = dir.entryInfoList(QDir::AllEntries | QDir::NoDotAndDotDot | QDir::Hidden | QDir::System);
+
+    foreach(QFileInfo one, all)
+        new ModelItem(one,item);
+}
+
+QVariant Model::getIcon(ModelItem *item) const
+{
+    QFileInfo type(item->fileInfo());
+    return m_fileIconProvider->icon(type);
+    //TODO: get more icons if these files have their own icons
+    return QVariant();
+}
+
+bool Model::canFetchMore(const QModelIndex &parent) const
+{
+    ModelItem *item = static_cast<ModelItem*>(parent.internalPointer());
+
+    if(item)
+        if(item->isSettled())
+            return false;
+
     return true;
 }
 

@@ -1,10 +1,12 @@
 #include "modelitem.h"
+#include <QDir>
+#include <QFileInfoList>
 
 ModelItem::ModelItem(const QFileInfo& fileInfo, ModelItem* parent)
 {
     m_parent = parent;
     m_fileInfo = fileInfo;
-
+    m_isSettled = false;
     if(parent)
     {
           parent->addChild(this);
@@ -12,6 +14,7 @@ ModelItem::ModelItem(const QFileInfo& fileInfo, ModelItem* parent)
     }
     else
     {
+        m_isSettled = true;
         m_absoluteFilePath = "";
     }
 }
@@ -41,7 +44,6 @@ ModelItem *ModelItem::matchPath(const QStringList &path, int startIndex)
     foreach(ModelItem* child, m_children)
     {
         QString match = temp.at(startIndex);
-
         if(child->fileName() == match)
         {
             if(startIndex + 1 == temp.count())
@@ -125,4 +127,15 @@ void ModelItem::clearAll()
     foreach(ModelItem *child, m_children)
         delete child;
     m_children.clear();
+    m_isSettled = false;
+}
+
+void ModelItem::setSettle(bool v)
+{
+    m_isSettled = v;
+}
+
+bool ModelItem::isSettled()
+{
+    return m_isSettled;
 }

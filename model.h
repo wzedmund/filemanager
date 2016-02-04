@@ -3,6 +3,7 @@
 
 #include <QAbstractItemModel>
 #include <QFileInfo>
+#include <QFileIconProvider>
 
 class ModelItem;
 
@@ -22,9 +23,14 @@ public:
     QString filePath(const QModelIndex &index);
     QModelIndex index(const QString& path) const;
     bool setRootPath(const QString& path);
+    int size(const QModelIndex &index);
+    void settleItem(ModelItem *item);
+    QVariant getIcon(ModelItem * item) const;
+    bool canFetchMore(const QModelIndex &parent) const;
 private:
     ModelItem* m_rootItem;
     QString m_currentRootPath;
+    QFileIconProvider * m_fileIconProvider;
 };
 
 #endif // ITEMMODEL_H

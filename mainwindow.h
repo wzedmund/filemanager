@@ -8,10 +8,14 @@
 #include <QVBoxLayout>
 #include <QDockWidget>
 #include <QFileInfo>
+#include <QComboBox>
+#include <QToolBar>
+#include <QCompleter>
 
 class TreeFilterProxyModel;
 class ViewFilterProxyModel;
 class Model;
+class AddressToolBar;
 
 class MainWindow : public QMainWindow
 {
@@ -23,10 +27,13 @@ public:
 
 public slots:
     void treeViewSelectionChanged(QModelIndex current, QModelIndex previous);
+    void listViewSelectionChanged(const QItemSelection selected, const QItemSelection deselected);
     void listViewPressed(QModelIndex current);
     void openFile();
     void executeFile(QModelIndex index, bool run);
-    void directoryLoaded();
+    void directoryChanged();
+    void pathEditChanged(QString path);
+    void listViewDoubleClicked(QModelIndex current);
 private:
     QListView * m_listView;
     QTreeView * m_treeView;
@@ -44,9 +51,15 @@ private:
     QItemSelectionModel *m_treeViewSelectionModel;
     QItemSelectionModel *m_listViewSelectionModel;
 
-    QFileInfo m_currentIndex;
+    QFileInfo m_currentFileInfo;
 
     QString m_startPath;
+
+    AddressToolBar * m_pathEdit;
+    QModelIndex m_backIndex;
+    QToolBar * m_addressBar;
+
+    QCompleter * m_completer;
 };
 
 #endif // MAINWINDOW_H

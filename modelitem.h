@@ -33,12 +33,16 @@ public:
     QString m_mimeType;
     QString m_permissions;
 
+    void setSettle(bool v);
+    bool isSettled();
+
 private:
 
     QList<ModelItem*> m_children;
     ModelItem* m_parent;
     QFileInfo m_fileInfo;
     QString m_absoluteFilePath;
+    bool m_isSettled;
 };
 
 #endif // MODELITEM_H
